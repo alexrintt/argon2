@@ -1,1 +1,1 @@
-https://alexrintt.io/argon2
+https://alexrintt.io/argon2.
