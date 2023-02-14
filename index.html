@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Argon2</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      margin: auto;
+      max-width: 640px;
+    }
+
+    #inputs * {
+      width: 100%;
+      display: block;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem 1rem;
+    }
+
+    label {
+      padding: 0;
+      margin: 1rem 0;
+    }
+
+    pre {
+      background-color: #f1f1f1;
+      padding: 1rem;
+      min-height: 75px;
+      width: 100%;
+      word-wrap: break-word;
+      display: block;
+      white-space: pre-wrap;
+    }
+
+    #errors {
+      background: rgb(255, 200, 200);
+    }
+
+    .output {
+      margin-bottom: 2rem;
+    }
+  </style>
+  <script src="/argon2/lib/argon2.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div id="inputs">
+      <label for="plain">Data, plain text (String):</label>
+      <input id="plain" type="text" placeholder="Plain text">
+      <label for="salt">Salt (String):</label>
+      <input minlength="8" id="salt" type="text" placeholder="Salt">
+      <label for="hashlen">Hash length (Int, default: 24):</label>
+      <input id="hashlen" type="number" placeholder="Hash length (default: 24)">
+      <label for="iter">Time, number of iterations (Int, default: 1):</label>
+      <input id="iter" type="number" placeholder="Time, number of iterations (default: 1)">
+      <label for="mem">Memory, used memory, in KiB (default: 1024):</label>
+      <input id="mem" type="number" placeholder="Memory, used memory, in KiB (default: 1024)">
+      <label for="parallelism">Paralellism (Int, default: 1):</label>
+      <input id="parallelism" type="number" placeholder="Paralellism (default: 1)">
+      <label for="type">Argon2 variant (type):</label>
+      <select id="type">
+        <option value="Argon2id">Argon2id</option>
+        <option value="Argon2d">Argon2d</option>
+        <option value="Argon2i">Argon2i</option>
+      </select>
+    </div>
+    <div class="output">
+      <p>Output:</p>
+      <pre id="hex"></pre>
+    </div>
+  </div>
+
+
+  <script>
+    const hexEl = document.getElementById("hex")
+    const saltEl = document.getElementById("salt")
+    const plainTxtEl = document.getElementById("plain")
+    const hashlenEl = document.getElementById("hashlen")
+    const iterEl = document.getElementById("iter")
+    const memEl = document.getElementById("mem")
+    const parallelismEl = document.getElementById("parallelism")
+    const typeEl = document.getElementById("type")
+
+    hexEl.addEventListener("input", genHash)
+    saltEl.addEventListener("input", genHash)
+    plainTxtEl.addEventListener("input", genHash)
+    hashlenEl.addEventListener("input", genHash)
+    iterEl.addEventListener("input", genHash)
+    memEl.addEventListener("input", genHash)
+    parallelismEl.addEventListener("input", genHash)
+    typeEl.addEventListener("change", genHash)
+
+    function genHash() {
+      const value = plainTxtEl.value || ""
+      const saltValue = saltEl.value || ""
+
+      if (!value) {
+        hexEl.style.background = "#f1f1f1"
+        hexEl.textContent = ``
+        return plainTxtEl.style.borderColor = "red"
+      }
+
+      plainTxtEl.style.borderColor = null
+
+      if (!saltValue) {
+        hexEl.style.background = "#f1f1f1"
+        hexEl.textContent = ``
+        return saltEl.style.borderColor = "red";
+      }
+
+      saltEl.style.borderColor = null
+
+      argon2.hash({
+        pass: value,
+        salt: saltValue,
+        hashLen: Number(hashlenEl.value || "24"),
+        time: Number(iterEl.value || "1"),
+        mem: Number(memEl.value || "1024"),
+        parallelism: Number(parallelismEl.value || "1"),
+        type: (() => {
+          switch (typeEl.options[typeEl.selectedIndex].text) {
+            case "Argon2id":
+              return argon2.ArgonType.Argon2id
+            case "Argon2i":
+              return argon2.ArgonType.Argon2i
+            case "Argon2d":
+              return argon2.ArgonType.Argon2d
+          }
+          return null
+        })()
+      })
+        .then(function (h) {
+          hexEl.style.background = "rgb(200, 255, 200)"
+          hexEl.textContent = `Hexadecimal Hash:\n${h.hashHex}\n\nEncoded Hash: \n${h.encoded}`
+        })
+        .catch(e => {
+          hexEl.style.background = "rgb(255, 200, 200)"
+          hexEl.textContent = JSON.stringify({ message: e.message, code: e.code }, null, 2)
+        })
+    }
+
+  </script>
+</body>
+
+</html>
